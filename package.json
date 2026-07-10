@@ -1,0 +1,44 @@
+{
+  "name": "gil",
+  "version": "0.1.0",
+  "description": "Locally ignore files from git (never committed) while keeping them visible to Claude Code's @ file references.",
+  "type": "module",
+  "bin": {
+    "gil": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/widcha/gil.git"
+  },
+  "homepage": "https://github.com/widcha/gil#readme",
+  "bugs": {
+    "url": "https://github.com/widcha/gil/issues"
+  },
+  "author": "widowicak",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/cli.ts",
+    "test": "vitest run",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "git",
+    "gitignore",
+    "skip-worktree",
+    "claude",
+    "cli"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
