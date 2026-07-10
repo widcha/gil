@@ -24,14 +24,18 @@ git's own skip-worktree flag), so `gil` keeps no database and never touches your
 
 ## Install
 
-Install straight from GitHub (no npm registry needed) — this builds the TypeScript
-automatically via the `prepare` script and puts the `gil` command on your PATH:
+Install straight from GitHub (no npm registry needed). Use the **tarball URL** — it
+extracts a normal install and puts the `gil` command on your PATH:
 
 ```bash
-npm install -g widcha/gil
+npm install -g https://github.com/widcha/gil/tarball/main
 ```
 
-To install a specific version/tag: `npm install -g widcha/gil#v0.1.0`.
+> **Why the tarball URL and not `npm install -g widcha/gil`?** On some npm versions the
+> GitHub *shorthand* installs a global package by symlinking it to a temporary cache clone
+> that npm then deletes, leaving a broken `gil` command. The tarball URL avoids that.
+
+To pin a tag/branch, swap `main` for it, e.g. `.../gil/tarball/v0.1.0`.
 
 ### From source (development)
 
