@@ -23,6 +23,7 @@
   "author": "widowicak",
   "scripts": {
     "build": "tsc",
+    "postbuild": "chmod +x dist/cli.js",
     "dev": "tsx src/cli.ts",
     "test": "vitest run",
     "prepublishOnly": "npm run build"
