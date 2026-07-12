@@ -151,6 +151,36 @@ describe("add-all", () => {
   });
 });
 
+describe("rm-all", () => {
+  it("restores every ignored file (both mechanisms) at once", () => {
+    writeFileSync(join(repo, "tracked.txt"), "v1");
+    git("add", "tracked.txt");
+    git("commit", "-qm", "init");
+    writeFileSync(join(repo, "tracked.txt"), "v2");
+    writeFileSync(join(repo, "a.local"), "a");
+    writeFileSync(join(repo, "b.local"), "b");
+
+    gil("add-all");
+    expect(statusPorcelain()).toBe(""); // all hidden
+
+    gil("rm-all");
+
+    // everything git should see is visible again
+    const st = statusPorcelain();
+    expect(st).toMatch(/tracked\.txt/);
+    expect(st).toMatch(/a\.local/);
+    expect(st).toMatch(/b\.local/);
+    // gil is now tracking nothing
+    expect(gil("list")).toMatch(/no files are locally ignored/i);
+    // and the .ignore bookkeeping file is cleaned up
+    expect(existsSync(join(repo, ".ignore"))).toBe(false);
+  });
+
+  it("reports when there is nothing to restore", () => {
+    expect(gil("rm-all")).toMatch(/nothing is locally ignored/i);
+  });
+});
+
 describe("list", () => {
   it("reports both mechanisms", () => {
     writeFileSync(join(repo, "tracked.txt"), "v1");

@@ -2,6 +2,7 @@
 import { add } from "./commands/add.js";
 import { addAll } from "./commands/addAll.js";
 import { remove } from "./commands/remove.js";
+import { removeAll } from "./commands/removeAll.js";
 import { list } from "./commands/list.js";
 import { status } from "./commands/status.js";
 import { GitError } from "./git.js";
@@ -14,6 +15,7 @@ Usage:
   gil add-all           Locally ignore every file in the current changes
                         (untracked files + tracked modifications).
   gil rm  <path...>     Undo a local ignore.
+  gil rm-all            Undo every local ignore (restore everything in 'gil list').
   gil list              List everything gil is locally ignoring.
   gil status [path...]  Diagnose each ignored file (hidden from git? visible to rg?).
   gil help              Show this help.
@@ -38,6 +40,11 @@ function main(argv: string[]): number {
     case "rm":
     case "remove":
       remove(rest);
+      return 0;
+    case "rm-all":
+    case "remove-all":
+    case "restore-all":
+      removeAll();
       return 0;
     case "list":
     case "ls":
