@@ -57,8 +57,35 @@ gil rm  <path...>      # undo
 gil rm-all             # undo everything gil is ignoring (restore all)
 gil list               # what gil is currently ignoring
 gil status [path...]   # per-file: hidden from git? visible to rg?
+gil pull [args...]     # git pull that survives giled files (see below)
 gil help
 ```
+
+### Pulling upstream changes
+
+A giled **tracked** file (skip-worktree) makes a plain `git pull` **abort** if upstream
+also changed that file:
+
+```
+error: Your local changes to the following files would be overwritten by merge:
+	config.json
+Aborting
+```
+
+`gil pull` handles this for you — it lifts the skip-worktree files, stashes your local
+edits, runs `git pull` (passing through any args), restores your edits, then re-giles
+everything that merged cleanly:
+
+```bash
+gil pull                 # instead of: git pull
+gil pull origin main     # args pass straight through to git pull
+```
+
+- If upstream didn't touch your giled files, it's completely seamless.
+- If upstream **did** change a giled file, you get a normal merge conflict to resolve.
+  gil leaves that file un-giled; fix the conflict, then `gil add` it again.
+- Untracked giled files (exclude + `.ignore`) are invisible to git, so pull never
+  touches them — they're always safe.
 
 Example:
 
@@ -73,9 +100,8 @@ git status             # secret.local does NOT appear
 - **Files, not directories.** ripgrep/git cannot re-include a file whose parent directory is
   excluded, so the `.ignore` trick can't keep a whole directory's contents visible to `@`. `gil`
   warns and skips directories — ignore individual files instead.
-- **`skip-worktree` caveat.** For tracked files, `git pull`/merge across a skip-worktree entry can
-  conflict or silently drop your local edits. Standard git behavior; use `gil rm` before pulling if
-  you expect upstream changes to that file.
+- **`skip-worktree` caveat.** For tracked files, a plain `git pull` aborts when upstream changed a
+  giled file. Use **`gil pull`** (above) instead — it lifts, pulls, and re-giles automatically.
 - Operates on the repository root's `.ignore` and that repo's `.git/info/exclude` (no nested or
   global-ignore handling).
 

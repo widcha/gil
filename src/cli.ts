@@ -4,6 +4,7 @@ import { addAll } from "./commands/addAll.js";
 import { remove } from "./commands/remove.js";
 import { removeAll } from "./commands/removeAll.js";
 import { list } from "./commands/list.js";
+import { pull } from "./commands/pull.js";
 import { status } from "./commands/status.js";
 import { GitError } from "./git.js";
 
@@ -18,6 +19,8 @@ Usage:
   gil rm-all            Undo every local ignore (restore everything in 'gil list').
   gil list              List everything gil is locally ignoring.
   gil status [path...]  Diagnose each ignored file (hidden from git? visible to rg?).
+  gil pull [args...]    'git pull' that survives giled files: lifts skip-worktree
+                        files, pulls, restores them, re-giles the clean ones.
   gil help              Show this help.
 
 Mechanism:
@@ -53,6 +56,9 @@ function main(argv: string[]): number {
     case "status":
       status(rest);
       return 0;
+    case "pull":
+      pull(rest);
+      return process.exitCode ? Number(process.exitCode) : 0;
     case "help":
     case "--help":
     case "-h":

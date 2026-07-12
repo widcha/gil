@@ -17,6 +17,12 @@ function gil(...args: string[]): string {
   }
   return (r.stdout ?? "") + (r.stderr ?? "");
 }
+
+/** Run gil in a given cwd without throwing on non-zero exit. */
+function gilAt(cwd: string, ...args: string[]): { code: number; out: string } {
+  const r = spawnSync(TSX, [CLI, ...args], { cwd, encoding: "utf8" });
+  return { code: r.status ?? 1, out: (r.stdout ?? "") + (r.stderr ?? "") };
+}
 function git(...args: string[]): string {
   return execFileSync("git", args, { cwd: repo, encoding: "utf8" }).trim();
 }
@@ -178,6 +184,95 @@ describe("rm-all", () => {
 
   it("reports when there is nothing to restore", () => {
     expect(gil("rm-all")).toMatch(/nothing is locally ignored/i);
+  });
+});
+
+describe("pull", () => {
+  let origin: string;
+  let work: string;
+
+  function git2(cwd: string, ...args: string[]): string {
+    return execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
+  }
+
+  beforeEach(() => {
+    origin = mkdtempSync(join(tmpdir(), "gil-origin-"));
+    execFileSync("git", ["init", "-q", "--bare", origin]);
+
+    // seed the origin via a throwaway clone
+    const seed = mkdtempSync(join(tmpdir(), "gil-seed-"));
+    git2(seed, "clone", "-q", origin, ".");
+    git2(seed, "config", "user.email", "t@t.dev");
+    git2(seed, "config", "user.name", "t");
+    writeFileSync(join(seed, "config.json"), "name=upstream\n");
+    writeFileSync(join(seed, "other.txt"), "one\n");
+    git2(seed, "add", "-A");
+    git2(seed, "commit", "-qm", "init");
+    git2(seed, "push", "-q", "origin", "HEAD:main");
+    rmSync(seed, { recursive: true, force: true });
+
+    // our working clone
+    work = mkdtempSync(join(tmpdir(), "gil-work-"));
+    git2(work, "clone", "-q", origin, ".");
+    git2(work, "config", "user.email", "t@t.dev");
+    git2(work, "config", "user.name", "t");
+    git2(work, "checkout", "-q", "-B", "main", "origin/main");
+  });
+
+  afterEach(() => {
+    rmSync(origin, { recursive: true, force: true });
+    rmSync(work, { recursive: true, force: true });
+  });
+
+  /** Push an upstream commit changing `file` to `content`. */
+  function pushUpstream(file: string, content: string): void {
+    const s = mkdtempSync(join(tmpdir(), "gil-up-"));
+    git2(s, "clone", "-q", origin, ".");
+    git2(s, "config", "user.email", "t@t.dev");
+    git2(s, "config", "user.name", "t");
+    git2(s, "checkout", "-q", "-B", "main", "origin/main");
+    writeFileSync(join(s, file), content);
+    git2(s, "commit", "-qam", "upstream change");
+    git2(s, "push", "-q", "origin", "main");
+    rmSync(s, { recursive: true, force: true });
+  }
+
+  it("plain git pull aborts when upstream changes a giled file (baseline)", () => {
+    writeFileSync(join(work, "config.json"), "name=MINE\n");
+    gilAt(work, "add", "config.json");
+    pushUpstream("config.json", "name=upstream-v2\n");
+
+    const r = spawnSync("git", ["pull", "origin", "main"], { cwd: work, encoding: "utf8" });
+    expect(r.stderr).toMatch(/would be overwritten by merge/);
+  });
+
+  it("gil pull is seamless when upstream changed a different file", () => {
+    writeFileSync(join(work, "config.json"), "name=MINE\n");
+    gilAt(work, "add", "config.json");
+    pushUpstream("other.txt", "one\ntwo\n"); // upstream touches a NON-giled file
+
+    const { code, out } = gilAt(work, "pull", "origin", "main");
+    expect(code).toBe(0);
+    expect(out).toMatch(/re-giled 1 file/);
+    // upstream change landed
+    expect(readFileSync(join(work, "other.txt"), "utf8")).toBe("one\ntwo\n");
+    // local edit preserved and still hidden from git
+    expect(readFileSync(join(work, "config.json"), "utf8")).toBe("name=MINE\n");
+    expect(git2(work, "status", "--porcelain")).toBe("");
+  });
+
+  it("gil pull surfaces a conflict when upstream changed the giled file, leaving it un-giled", () => {
+    writeFileSync(join(work, "config.json"), "name=MINE\n");
+    gilAt(work, "add", "config.json");
+    pushUpstream("config.json", "name=upstream-v2\n");
+
+    const { code, out } = gilAt(work, "pull", "origin", "main");
+    expect(code).toBe(1); // signals action needed
+    expect(out).toMatch(/merge conflicts/i);
+    // conflict markers present for the user to resolve
+    expect(readFileSync(join(work, "config.json"), "utf8")).toMatch(/<<<<<<</);
+    // it is NOT re-giled — git can see the conflict
+    expect(git2(work, "status", "--porcelain")).toMatch(/config\.json/);
   });
 });
 

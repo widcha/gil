@@ -1,4 +1,4 @@
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
 
@@ -127,4 +127,22 @@ export function listChangedPaths(root: string): string[] {
     }
   }
   return out;
+}
+
+/** Run a git command with the user's terminal attached; returns the exit code. */
+export function runGitInherit(args: string[], cwd: string): number {
+  const r = spawnSync("git", args, { cwd, stdio: "inherit" });
+  if (r.error) throw new GitError(r.error.message);
+  return r.status ?? 1;
+}
+
+/** True if any of the given paths have staged or unstaged modifications. */
+export function hasLocalChanges(root: string, paths: string[]): boolean {
+  if (paths.length === 0) return false;
+  return splitZ(gitRaw(["status", "--porcelain", "-z", "--", ...paths], root)).length > 0;
+}
+
+/** Repo-relative paths currently in an unmerged (conflicted) state. */
+export function unmergedPaths(root: string): string[] {
+  return splitZ(gitRaw(["diff", "--name-only", "--diff-filter=U", "-z"], root));
 }
