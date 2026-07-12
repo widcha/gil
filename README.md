@@ -52,6 +52,7 @@ Or run without installing: `npm run dev -- <args>` (e.g. `npm run dev -- add sec
 
 ```bash
 gil add <path...>      # locally ignore file(s)
+gil add-all            # locally ignore everything in the current changes
 gil rm  <path...>      # undo
 gil list               # what gil is currently ignoring
 gil status [path...]   # per-file: hidden from git? visible to rg?

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { add } from "./commands/add.js";
+import { addAll } from "./commands/addAll.js";
 import { remove } from "./commands/remove.js";
 import { list } from "./commands/list.js";
 import { status } from "./commands/status.js";
@@ -10,6 +11,8 @@ const HELP = `gil — locally ignore files from git while keeping them visible t
 Usage:
   gil add <path...>     Locally ignore file(s): git stops tracking changes, but
                         ripgrep/Claude's @ can still see and read them.
+  gil add-all           Locally ignore every file in the current changes
+                        (untracked files + tracked modifications).
   gil rm  <path...>     Undo a local ignore.
   gil list              List everything gil is locally ignoring.
   gil status [path...]  Diagnose each ignored file (hidden from git? visible to rg?).
@@ -27,6 +30,10 @@ function main(argv: string[]): number {
   switch (cmd) {
     case "add":
       add(rest);
+      return 0;
+    case "add-all":
+    case "addall":
+      addAll();
       return 0;
     case "rm":
     case "remove":

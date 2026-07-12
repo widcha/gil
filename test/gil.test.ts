@@ -110,6 +110,47 @@ describe("tracked files", () => {
   });
 });
 
+describe("add-all", () => {
+  it("ignores untracked files and tracked modifications in one shot", () => {
+    // a committed file we then modify locally
+    writeFileSync(join(repo, "tracked.txt"), "v1");
+    git("add", "tracked.txt");
+    git("commit", "-qm", "init");
+    writeFileSync(join(repo, "tracked.txt"), "v2"); // unstaged modification
+
+    // untracked files, including one nested in a new directory
+    writeFileSync(join(repo, "a.local"), "a");
+    execFileSync("mkdir", [join(repo, "nested")]);
+    writeFileSync(join(repo, "nested/b.local"), "b");
+
+    gil("add-all");
+
+    // git now reports a clean tree
+    expect(statusPorcelain()).toBe("");
+    // every changed file remains visible to ripgrep / '@'
+    const files = rgFiles();
+    expect(files).toContain("tracked.txt");
+    expect(files).toContain("a.local");
+    expect(files).toContain("nested/b.local"); // nested untracked file expanded, not a dir
+  });
+
+  it("reports when there is nothing to ignore", () => {
+    const out = gil("add-all");
+    expect(out).toMatch(/no current changes/i);
+  });
+
+  it("excludes deletions (nothing on disk to keep visible)", () => {
+    writeFileSync(join(repo, "gone.txt"), "x");
+    git("add", "gone.txt");
+    git("commit", "-qm", "c");
+    rmSync(join(repo, "gone.txt"));
+
+    gil("add-all");
+    // the deletion is still a real change git should show; add-all must not touch it
+    expect(statusPorcelain()).toMatch(/gone\.txt/);
+  });
+});
+
 describe("list", () => {
   it("reports both mechanisms", () => {
     writeFileSync(join(repo, "tracked.txt"), "v1");
