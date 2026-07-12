@@ -1,5 +1,5 @@
 {
-  "name": "gil",
+  "name": "gilocal",
   "version": "0.1.0",
   "description": "Locally ignore files from git (never committed) while keeping them visible to Claude Code's @ file references.",
   "type": "module",

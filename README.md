@@ -24,18 +24,21 @@ git's own skip-worktree flag), so `gil` keeps no database and never touches your
 
 ## Install
 
-Install straight from GitHub (no npm registry needed). Use the **tarball URL** — it
-extracts a normal install and puts the `gil` command on your PATH:
+From the npm registry (the package is named `gilocal`; the command it installs is `gil`):
+
+```bash
+npm install -g gilocal
+```
+
+> **Why `gilocal` and not `gil`?** The bare name `gil` was already taken on npm. And
+> `npm install -g widcha/gil` (the GitHub shorthand) doesn't work for global installs —
+> npm symlinks it to a temporary cache clone it then deletes, leaving a broken command.
+
+### Alternative: straight from GitHub
 
 ```bash
 npm install -g https://github.com/widcha/gil/tarball/main
 ```
-
-> **Why the tarball URL and not `npm install -g widcha/gil`?** On some npm versions the
-> GitHub *shorthand* installs a global package by symlinking it to a temporary cache clone
-> that npm then deletes, leaving a broken `gil` command. The tarball URL avoids that.
-
-To pin a tag/branch, swap `main` for it, e.g. `.../gil/tarball/v0.1.0`.
 
 ### From source (development)
 
