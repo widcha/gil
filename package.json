@@ -1,6 +1,9 @@
 {
-  "name": "gilocal",
+  "name": "@widcha/gil",
   "version": "0.1.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "Locally ignore files from git (never committed) while keeping them visible to Claude Code's @ file references.",
   "type": "module",
   "bin": {

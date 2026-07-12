@@ -24,13 +24,13 @@ git's own skip-worktree flag), so `gil` keeps no database and never touches your
 
 ## Install
 
-From the npm registry (the package is named `gilocal`; the command it installs is `gil`):
+From the npm registry (the package is `@widcha/gil`; the command it installs is `gil`):
 
 ```bash
-npm install -g gilocal
+npm install -g @widcha/gil
 ```
 
-> **Why `gilocal` and not `gil`?** The bare name `gil` was already taken on npm. And
+> **Why the `@widcha/` scope?** The bare name `gil` was already taken on npm. And
 > `npm install -g widcha/gil` (the GitHub shorthand) doesn't work for global installs —
 > npm symlinks it to a temporary cache clone it then deletes, leaving a broken command.
 
